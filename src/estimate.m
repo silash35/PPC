@@ -2,7 +2,7 @@ close all
 clc
 
 %% Leitura dos dados
-dados = readtable('../data/simulation.csv');   % nome do arquivo CSV
+dados = readtable('data/simulation_deviation.csv');   % nome do arquivo CSV
 
 t     = dados.t;
 m_dot = dados.m_dot;
@@ -18,18 +18,13 @@ y = Pp;                 % saída (ASSUMIDO)
 u = [N alpha];          % entradas múltiplas
 
 %% Separação em dados de estimação e validação
-N_est = floor(length(y)*0.6);
+N_est = floor(length(y)*0.5);
 
-ze = iddata(y(1:N_est), ...
-            u(1:N_est,:), ...
-            Ts);
-
-zv = iddata(y(N_est+1:end), ...
-            u(N_est+1:end,:), ...
-            Ts);
+ze = iddata(y(1:N_est), u(1:N_est,:), Ts);
+zv = iddata(y(N_est+1:end), u(N_est+1:end,:), Ts);
 
 %% Estrutura do modelo
-estrutura = idproc('P2');   % modelo de processo de 2 polos
+estrutura = idproc('P2'); 
 
 %% Estimação dos parâmetros
 Modelo_estimado = pem(ze, estrutura);
