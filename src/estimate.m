@@ -1,8 +1,9 @@
 close all
+clear
 clc
 
 %% Leitura dos dados
-dados = readtable('data/simulation_deviation.csv');   % nome do arquivo CSV
+dados = readtable('../data/simulation_deviation.csv');   % nome do arquivo CSV
 
 t     = dados.t;
 m_dot = dados.m_dot;
@@ -10,39 +11,21 @@ Pp    = dados.Pp;
 N     = dados.N;
 alpha = dados.alpha;
 
-%% Parâmetros
-Ts = mean(0.1);   % intervalo de amostragem estimado a partir do tempo
+y = [m_dot Pp];
+u = [N alpha]; % entradas multiplas
 
-%% Definição de entrada e saída
-y = Pp;                 % saída (ASSUMIDO)
-u = [N alpha];          % entradas múltiplas
+%% Configura��es
+Ts = 0.1;   % intervalo de amostragem estimado a partir do tempo
+N_est = floor(length(t)*0.5); % Separa��o em dados de estima��o e valida��o
 
-%% Separação em dados de estimação e validação
-N_est = floor(length(y)*0.5);
+%% Criando modelo MIMO
+z_train = iddata(y(1:N_est,:), u(1:N_est,:), Ts);
+z_validation = iddata(y(N_est+1:end,:), u(N_est+1:end,:), Ts);
 
-ze = iddata(y(1:N_est), u(1:N_est,:), Ts);
-zv = iddata(y(N_est+1:end), u(N_est+1:end,:), Ts);
+modelo = procest(z_train, {'P2ZU', 'P2ZU'; 'P2ZU', 'P2ZU'});
+tf(modelo(1,1))
+tf(modelo(1,2))
+tf(modelo(2,1))
+tf(modelo(2,2))
 
-%% Estrutura do modelo
-estrutura = idproc('P2'); 
-
-%% Estimação dos parâmetros
-Modelo_estimado = pem(ze, estrutura);
-
-%% Simulação (infinitos passos à frente)
-yest = idsim(u, Modelo_estimado);
-
-%% Comparação modelo x dados de validação
-figure(1)
-compare(zv, Modelo_estimado)
-grid on
-
-%% Comparação temporal
-figure(2)
-plot(y, 'b', 'LineWidth', 1.5)
-hold on
-plot(yest, 'r--', 'LineWidth', 1.5)
-legend('Experimental', 'Modelo')
-xlabel('Amostras')
-ylabel('Pp')
-grid on
+compare(z_validation, modelo)
