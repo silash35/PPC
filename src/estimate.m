@@ -28,4 +28,5 @@ tf(modelo(1,2))
 tf(modelo(2,1))
 tf(modelo(2,2))
 
-compare(z_validation, modelo)
+compare(z_validation, modelo);
+aic(modelo) % Critério para comparar modelos (está no slide)
